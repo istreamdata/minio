@@ -55,7 +55,7 @@ func assetFS() *assetfs.AssetFS {
 }
 
 // specialAssets are files which are unique files not embedded inside index_bundle.js.
-const specialAssets = "loader.css|logo.svg|firefox.png|safari.png|chrome.png|favicon.ico"
+const specialAssets = "loader.css|logo.png|firefox.png|safari.png|chrome.png|favicon.ico"
 
 // registerWebRouter - registers web router for serving minio browser.
 func registerWebRouter(mux *router.Router) error {
