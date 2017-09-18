@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-// Holds the current directory path. Used for trimming path in traceError()
+// Holds the current directory path. Used for trimming path in TraceError()
 var rootPath string
 
 // Figure out the rootPath
@@ -66,7 +66,7 @@ func (e Error) Trace() []string {
 }
 
 // NewStorageError - return new Error type.
-func traceError(e error, errs ...error) error {
+func TraceError(e error, errs ...error) error {
 	if e == nil {
 		return nil
 	}
@@ -152,7 +152,7 @@ func isErr(err error, errs ...error) bool {
 	return false
 }
 
-// traceErrorf behaves like fmt.traceErrorf but also traces the returned error.
-func traceErrorf(format string, args ...interface{}) error {
-	return traceError(fmt.Errorf(format, args...))
+// TraceErrorf behaves like fmt.traceErrorf but also traces the returned error.
+func TraceErrorf(format string, args ...interface{}) error {
+	return TraceError(fmt.Errorf(format, args...))
 }

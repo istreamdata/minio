@@ -277,8 +277,8 @@ type uploadMetadata struct {
 	HealUploadInfo *HealObjectInfo `xml:"HealUploadInfo,omitempty"`
 }
 
-// completePart - completed part container.
-type completePart struct {
+// CompletePart - completed part container.
+type CompletePart struct {
 	// Part number identifying the part. This is a positive integer between 1 and
 	// 10,000
 	PartNumber int
@@ -288,7 +288,7 @@ type completePart struct {
 }
 
 // completedParts - is a collection satisfying sort.Interface.
-type completedParts []completePart
+type completedParts []CompletePart
 
 func (a completedParts) Len() int           { return len(a) }
 func (a completedParts) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
@@ -296,5 +296,5 @@ func (a completedParts) Less(i, j int) bool { return a[i].PartNumber < a[j].Part
 
 // completeMultipartUpload - represents input fields for completing multipart upload.
 type completeMultipartUpload struct {
-	Parts []completePart `xml:"Part"`
+	Parts []CompletePart `xml:"Part"`
 }

@@ -174,12 +174,12 @@ func mustGetUUID() string {
 }
 
 // Create an s3 compatible MD5sum for complete multipart transaction.
-func getCompleteMultipartMD5(parts []completePart) (string, error) {
+func getCompleteMultipartMD5(parts []CompletePart) (string, error) {
 	var finalMD5Bytes []byte
 	for _, part := range parts {
 		md5Bytes, err := hex.DecodeString(part.ETag)
 		if err != nil {
-			return "", traceError(err)
+			return "", TraceError(err)
 		}
 		finalMD5Bytes = append(finalMD5Bytes, md5Bytes...)
 	}

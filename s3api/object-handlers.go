@@ -897,7 +897,7 @@ func (api objectAPIHandlers) CompleteMultipartUploadHandler(w http.ResponseWrite
 	}
 
 	// Complete parts.
-	var completeParts []completePart
+	var completeParts []CompletePart
 	for _, part := range complMultipartUpload.Parts {
 		part.ETag = canonicalizeETag(part.ETag)
 		completeParts = append(completeParts, part)

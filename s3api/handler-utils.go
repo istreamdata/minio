@@ -108,7 +108,7 @@ var userMetadataKeyPrefixes = []string{
 // extractMetadataFromHeader extracts metadata from HTTP header.
 func extractMetadataFromHeader(header http.Header) (map[string]string, error) {
 	if header == nil {
-		return nil, traceError(errInvalidArgument)
+		return nil, TraceError(errInvalidArgument)
 	}
 	metadata := make(map[string]string)
 	// Save standard supported headers.
@@ -125,7 +125,7 @@ func extractMetadataFromHeader(header http.Header) (map[string]string, error) {
 	// Go through all other headers for any additional headers that needs to be saved.
 	for key := range header {
 		if key != http.CanonicalHeaderKey(key) {
-			return nil, traceError(errInvalidArgument)
+			return nil, TraceError(errInvalidArgument)
 		}
 		for _, prefix := range userMetadataKeyPrefixes {
 			if strings.HasPrefix(key, prefix) {
@@ -183,7 +183,7 @@ func validateFormFieldSize(formValues http.Header) error {
 	for k := range formValues {
 		// Check if value's field exceeds S3 limit
 		if int64(len(formValues.Get(k))) > maxFormFieldSize {
-			return traceError(errSizeUnexpected)
+			return TraceError(errSizeUnexpected)
 		}
 	}
 
@@ -212,7 +212,7 @@ func extractPostPolicyFormValues(form *multipart.Form) (filePart io.ReadCloser, 
 		canonicalFormName := http.CanonicalHeaderKey(k)
 		if canonicalFormName == "File" {
 			if len(v) == 0 {
-				return nil, "", 0, nil, traceError(errInvalidArgument)
+				return nil, "", 0, nil, TraceError(errInvalidArgument)
 			}
 			// Fetch fileHeader which has the uploaded file information
 			fileHeader := v[0]
@@ -221,17 +221,17 @@ func extractPostPolicyFormValues(form *multipart.Form) (filePart io.ReadCloser, 
 			// Open the uploaded part
 			filePart, err = fileHeader.Open()
 			if err != nil {
-				return nil, "", 0, nil, traceError(err)
+				return nil, "", 0, nil, TraceError(err)
 			}
 			// Compute file size
 			fileSize, err = filePart.(io.Seeker).Seek(0, 2)
 			if err != nil {
-				return nil, "", 0, nil, traceError(err)
+				return nil, "", 0, nil, TraceError(err)
 			}
 			// Reset Seek to the beginning
 			_, err = filePart.(io.Seeker).Seek(0, 0)
 			if err != nil {
-				return nil, "", 0, nil, traceError(err)
+				return nil, "", 0, nil, TraceError(err)
 			}
 			// File found and ready for reading
 			break
