@@ -22,17 +22,12 @@ import (
 	"time"
 )
 
-// Attempt to retry only this many number of times before
-// giving up on the remote RPC entirely.
-const globalAuthRPCRetryThreshold = 1
-
 // authConfig requires to make new AuthRPCClient.
 type authConfig struct {
 	accessKey        string // Access key (like username) for authentication.
 	secretKey        string // Secret key (like Password) for authentication.
 	serverAddr       string // RPC server address.
 	serviceEndpoint  string // Endpoint on the server to make any RPC call.
-	secureConn       bool   // Make TLS connection to RPC server or not.
 	serviceName      string // Service name of auth server.
 	disableReconnect bool   // Disable reconnect on failure or not.
 
@@ -56,26 +51,6 @@ type AuthRPCClient struct {
 	rpcClient    *RPCClient // Reconnectable RPC client to make any RPC call.
 	config       authConfig // Authentication configuration information.
 	authToken    string     // Authentication token.
-}
-
-// newAuthRPCClient - returns a JWT based authenticated (go) rpc client, which does automatic reconnect.
-func newAuthRPCClient(config authConfig) *AuthRPCClient {
-	// Check if retry params are set properly if not default them.
-	emptyDuration := time.Duration(int64(0))
-	if config.retryUnit == emptyDuration {
-		config.retryUnit = defaultRetryUnit
-	}
-	if config.retryCap == emptyDuration {
-		config.retryCap = defaultRetryCap
-	}
-	if config.retryAttemptThreshold == 0 {
-		config.retryAttemptThreshold = globalAuthRPCRetryThreshold
-	}
-
-	return &AuthRPCClient{
-		rpcClient: newRPCClient(config.serverAddr, config.serviceEndpoint, config.secureConn),
-		config:    config,
-	}
 }
 
 // Login a JWT based authentication is performed with rpc server.

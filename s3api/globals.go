@@ -17,21 +17,15 @@
 package s3api
 
 import (
-	"crypto/tls"
 	"crypto/x509"
-	"os"
 	"runtime"
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/fatih/color"
-	miniohttp "github.com/minio/minio/pkg/http"
 )
 
 // minio configuration related constants.
 const (
-	globalMinioCertExpireWarnDays = time.Hour * 24 * 30 // 30 days.
-
 	globalMinioDefaultRegion = ""
 	// This is a sha256 output of ``arn:aws:iam::minio:user/admin``,
 	// this is kept in present form to be compatible with S3 owner ID
@@ -45,14 +39,9 @@ const (
 	globalMinioDefaultOwnerID      = "02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4"
 	globalMinioDefaultStorageClass = "STANDARD"
 	globalWindowsOSName            = "windows"
-	globalNetBSDOSName             = "netbsd"
-	globalSolarisOSName            = "solaris"
 	globalMinioModeFS              = "mode-server-fs"
 	globalMinioModeXL              = "mode-server-xl"
 	globalMinioModeDistXL          = "mode-server-distributed-xl"
-	globalMinioModeGatewayAzure    = "mode-gateway-azure"
-	globalMinioModeGatewayS3       = "mode-gateway-s3"
-	globalMinioModeGatewayGCS      = "mode-gateway-gcs"
 	// Add new global values here.
 )
 
@@ -67,107 +56,19 @@ const (
 	// The maximum allowed time difference between the incoming request
 	// date and server date during signature verification.
 	globalMaxSkewTime = 15 * time.Minute // 15 minutes skew allowed.
-
-	// Default Read/Write timeouts for each connection.
-	globalConnReadTimeout  = 15 * time.Minute // Timeout after 15 minutes of no data sent by the client.
-	globalConnWriteTimeout = 15 * time.Minute // Timeout after 15 minutes if no data received by the client.
 )
 
 var (
-	// Indicates if the running minio server is distributed setup.
-	globalIsDistXL = false
-
-	// Indicates if the running minio server is an erasure-code backend.
-	globalIsXL = false
-
-	// This flag is set to 'true' by default
-	globalIsBrowserEnabled = true
-
-	// This flag is set to 'true' when MINIO_BROWSER env is set.
-	globalIsEnvBrowser = false
-
-	// Set to true if credentials were passed from env, default is false.
-	globalIsEnvCreds = false
-
-	// This flag is set to 'true' wen MINIO_REGION env is set.
-	globalIsEnvRegion = false
-
-	// This flag is set to 'us-east-1' by default
-	globalServerRegion = globalMinioDefaultRegion
-
-	// Maximum size of internal objects parts
-	globalPutPartSize = int64(64 * 1024 * 1024)
-
-	// Minio local server address (in `host:port` format)
-	globalMinioAddr = ""
 	// Minio default port, can be changed through command line.
 	globalMinioPort = "9000"
-	// Holds the host that was passed using --address
-	globalMinioHost = ""
 
 	// CA root certificates, a nil value means system certs pool will be used
 	globalRootCAs *x509.CertPool
 
-	// IsSSL indicates if the server is configured with SSL.
-	globalIsSSL bool
-
-	globalTLSCertificate *tls.Certificate
-
-	globalHTTPServer        *miniohttp.Server
-	globalHTTPServerErrorCh = make(chan error)
-	globalOSSignalCh        = make(chan os.Signal, 1)
-
 	// Minio server user agent string.
 	globalServerUserAgent = "Minio/" + ReleaseTag + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
-
-	globalEndpoints EndpointList
-
-	// Global server's network statistics
-	globalConnStats = newConnStats()
-
-	// Global HTTP request statisitics
-	globalHTTPStats = newHTTPStats()
-
-	// Time when object layer was initialized on start up.
-	globalBootTime time.Time
-
-	globalActiveCred         credential
-	globalPublicCerts        []*x509.Certificate
-	globalXLObjCacheDisabled bool
 	// Add new variable global values here.
 
-	globalListingTimeout   = newDynamicTimeout( /*30*/ 600*time.Second /*5*/, 600*time.Second) // timeout for listing related ops
-	globalObjectTimeout    = newDynamicTimeout( /*1*/ 10*time.Minute /*10*/, 600*time.Second)  // timeout for Object API related ops
-	globalOperationTimeout = newDynamicTimeout(10*time.Minute /*30*/, 600*time.Second)         // default timeout for general ops
-	globalHealingTimeout   = newDynamicTimeout(30*time.Minute /*1*/, 30*time.Minute)           // timeout for healing related ops
-
-	// Keep connection active for clients actively using ListenBucketNotification.
-	globalSNSConnAlive = 5 * time.Second // Send a whitespace every 5 seconds.
+	globalObjectTimeout    = newDynamicTimeout( /*1*/ 10*time.Minute /*10*/, 600*time.Second) // timeout for Object API related ops
+	globalOperationTimeout = newDynamicTimeout(10*time.Minute /*30*/, 600*time.Second)        // default timeout for general ops
 )
-
-// global colors.
-var (
-	colorBold   = color.New(color.Bold).SprintFunc()
-	colorBlue   = color.New(color.FgBlue).SprintfFunc()
-	colorYellow = color.New(color.FgYellow).SprintfFunc()
-)
-
-// Returns minio global information, as a key value map.
-// returned list of global values is not an exhaustive
-// list. Feel free to add new relevant fields.
-func getGlobalInfo() (globalInfo map[string]interface{}) {
-	globalInfo = map[string]interface{}{
-		"isDistXL":         globalIsDistXL,
-		"isXL":             globalIsXL,
-		"isBrowserEnabled": globalIsBrowserEnabled,
-		"isEnvBrowser":     globalIsEnvBrowser,
-		"isEnvCreds":       globalIsEnvCreds,
-		"isEnvRegion":      globalIsEnvRegion,
-		"isSSL":            globalIsSSL,
-		"serverRegion":     globalServerRegion,
-		"serverUserAgent":  globalServerUserAgent,
-		// Add more relevant global settings here.
-	}
-
-	return globalInfo
-}

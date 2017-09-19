@@ -17,15 +17,10 @@
 package s3api
 
 import (
-	"encoding/hex"
-	"fmt"
-	"io"
 	"path"
 	"runtime"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/skyrings/skyring-common/tools/uuid"
 )
 
 const (
@@ -147,11 +142,6 @@ func IsValidObjectPrefix(object string) bool {
 // Slash separator.
 const slashSeparator = "/"
 
-// retainSlash - retains slash from a path.
-func retainSlash(s string) string {
-	return strings.TrimSuffix(s, slashSeparator) + slashSeparator
-}
-
 // pathJoin - like path.Join() but retains trailing "/" of the last element
 func pathJoin(elem ...string) string {
 	trailingSlash := ""
@@ -161,59 +151,6 @@ func pathJoin(elem ...string) string {
 		}
 	}
 	return path.Join(elem...) + trailingSlash
-}
-
-// mustGetUUID - get a random UUID.
-func mustGetUUID() string {
-	uuid, err := uuid.New()
-	if err != nil {
-		panic(fmt.Sprintf("Random UUID generation failed. Error: %s", err))
-	}
-
-	return uuid.String()
-}
-
-// Create an s3 compatible MD5sum for complete multipart transaction.
-func getCompleteMultipartMD5(parts []CompletePart) (string, error) {
-	var finalMD5Bytes []byte
-	for _, part := range parts {
-		md5Bytes, err := hex.DecodeString(part.ETag)
-		if err != nil {
-			return "", TraceError(err)
-		}
-		finalMD5Bytes = append(finalMD5Bytes, md5Bytes...)
-	}
-	s3MD5 := fmt.Sprintf("%s-%d", getMD5Hash(finalMD5Bytes), len(parts))
-	return s3MD5, nil
-}
-
-// Clean meta etag keys 'md5Sum', 'etag'.
-func cleanMetaETag(metadata map[string]string) map[string]string {
-	return cleanMetadata(metadata, "md5Sum", "etag")
-}
-
-// Clean metadata takes keys to be filtered
-// and returns a new map with the keys filtered.
-func cleanMetadata(metadata map[string]string, keyNames ...string) map[string]string {
-	var newMeta = make(map[string]string)
-	for k, v := range metadata {
-		if contains(keyNames, k) {
-			continue
-		}
-		newMeta[k] = v
-	}
-	return newMeta
-}
-
-// Extracts etag value from the metadata.
-func extractETag(metadata map[string]string) string {
-	// md5Sum tag is kept for backward compatibility.
-	etag, ok := metadata["md5Sum"]
-	if !ok {
-		etag = metadata["etag"]
-	}
-	// Success.
-	return etag
 }
 
 // Prefix matcher string matches prefix in a platform specific way.
@@ -234,62 +171,4 @@ func hasSuffix(s string, suffix string) bool {
 		return strings.HasSuffix(strings.ToLower(s), strings.ToLower(suffix))
 	}
 	return strings.HasSuffix(s, suffix)
-}
-
-// Validates if two strings are equal.
-func isStringEqual(s1 string, s2 string) bool {
-	if runtime.GOOS == globalWindowsOSName {
-		return strings.EqualFold(s1, s2)
-	}
-	return s1 == s2
-}
-
-// Ignores all reserved bucket names or invalid bucket names.
-func isReservedOrInvalidBucket(bucketEntry string) bool {
-	bucketEntry = strings.TrimSuffix(bucketEntry, slashSeparator)
-	if !IsValidBucketName(bucketEntry) {
-		return true
-	}
-	return isMinioMetaBucket(bucketEntry) || isMinioReservedBucket(bucketEntry)
-}
-
-// Returns true if input bucket is a reserved minio meta bucket '.minio.sys'.
-func isMinioMetaBucket(bucketName string) bool {
-	return bucketName == minioMetaBucket
-}
-
-// Returns true if input bucket is a reserved minio bucket 'minio'.
-func isMinioReservedBucket(bucketName string) bool {
-	return bucketName == minioReservedBucket
-}
-
-// byBucketName is a collection satisfying sort.Interface.
-type byBucketName []BucketInfo
-
-func (d byBucketName) Len() int           { return len(d) }
-func (d byBucketName) Swap(i, j int)      { d[i], d[j] = d[j], d[i] }
-func (d byBucketName) Less(i, j int) bool { return d[i].Name < d[j].Name }
-
-// rangeReader returns a Reader that reads from r
-// but returns error after Max bytes read as errDataTooLarge.
-// but returns error if reader exits before reading Min bytes
-// errDataTooSmall.
-type rangeReader struct {
-	Reader io.Reader // underlying reader
-	Min    int64     // min bytes remaining
-	Max    int64     // max bytes remaining
-}
-
-func (l *rangeReader) Read(p []byte) (n int, err error) {
-	n, err = l.Reader.Read(p)
-	l.Max -= int64(n)
-	l.Min -= int64(n)
-	if l.Max < 0 {
-		// If more data is available than what is expected we return error.
-		return 0, errDataTooLarge
-	}
-	if err == io.EOF && l.Min > 0 {
-		return 0, errDataTooSmall
-	}
-	return
 }

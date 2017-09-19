@@ -104,30 +104,6 @@ func mustGetDefaultConfigDir() string {
 
 var configDir = &ConfigDir{dir: mustGetDefaultConfigDir()}
 
-func setConfigDir(dir string) {
-	configDir.Set(dir)
-}
-
-func getConfigDir() string {
-	return configDir.Get()
-}
-
-func getCADir() string {
-	return configDir.GetCADir()
-}
-
-func createConfigDir() error {
-	return configDir.Create()
-}
-
 func getConfigFile() string {
 	return configDir.GetMinioConfigFile()
-}
-
-func getPublicCertFile() string {
-	return configDir.GetPublicCertFile()
-}
-
-func getPrivateKeyFile() string {
-	return configDir.GetPrivateKeyFile()
 }
