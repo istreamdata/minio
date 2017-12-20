@@ -34,7 +34,7 @@ import (
 // minio configuration related constants.
 const (
 	globalMinioConfigVersion      = "13"
-	globalMinioConfigDir          = ".minio"
+	globalMinioConfigDir          = ".datomizer"
 	globalMinioCertsDir           = "certs"
 	globalMinioCertsCADir         = "CAs"
 	globalMinioCertFile           = "public.crt"
@@ -43,7 +43,7 @@ const (
 	globalMinioCertExpireWarnDays = time.Hour * 24 * 30 // 30 days.
 
 	globalMinioDefaultRegion       = "us-east-1"
-	globalMinioDefaultOwnerID      = "minio"
+	globalMinioDefaultOwnerID      = "datomizer"
 	globalMinioDefaultStorageClass = "STANDARD"
 	globalWindowsOSName            = "windows"
 	globalNetBSDOSName             = "netbsd"
@@ -111,7 +111,7 @@ var (
 	globalAdminPeers = adminPeers{}
 
 	// Minio server user agent string.
-	globalServerUserAgent = "Minio/" + ReleaseTag + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
+	globalServerUserAgent = "Datomizer/" + ReleaseTag + " (" + runtime.GOOS + "; " + runtime.GOARCH + ")"
 
 	// Set to true if credentials were passed from env, default is false.
 	globalIsEnvCreds = false
